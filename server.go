@@ -32,10 +32,16 @@ func main() {
 
 	// Discover devices during the scan.
 	err = d.Scan(ctx, false, func(a ble.Advertisement) {
+		val := ""
+		if len(a.Services()) > 0 {
+			val = fmt.Sprint(a.Services()[0])
 
-		if a.LocalName() == "Poco M6 Pro" {
-			fmt.Printf("Device found: %s\n", a.Addr())
+			if val == "1819" {
+				fmt.Printf("Device name:%s\t SSID:%s\n", a.LocalName(), val)
+
+			}
 		}
+
 	})
 
 	must("scan", err)
