@@ -37,7 +37,7 @@ func main() {
 			val = fmt.Sprint(a.Services()[0])
 
 			if val == "1819" {
-				fmt.Printf("Device name:%s\t SSID:%s\n", a.LocalName(), val)
+				fmt.Printf("Device name:%s\t SSID:%s\t MACID:%s\n", a.LocalName(), val, a.Addr().String())
 
 			}
 		}
