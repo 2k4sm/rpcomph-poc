@@ -3,10 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/go-ble/ble"
 	"github.com/go-ble/ble/linux"
+)
+
+const (
+	characteristicUUID = "1822"
+	serviceUUID        = "1821"
 )
 
 func must(desc string, err error) {
@@ -19,32 +25,56 @@ func main() {
 	// Initialize the Bluetooth adapter.
 	d, err := linux.NewDevice()
 	must("new device", err)
-	//defer d.Stop()
+	defer d.Stop()
 
-	// Set a timeout for scanning (e.g., 10 seconds).
-	timeout := 100 * time.Second
+	//setup the default device.
+	ble.SetDefaultDevice(d)
 
-	// Start scanning for BLE devices.
-	fmt.Println("Scanning for devices...")
-
+	// define context
+	timeout := 10000 * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	// Discover devices during the scan.
-	err = d.Scan(ctx, false, func(a ble.Advertisement) {
-		val := ""
-		if len(a.Services()) > 0 {
-			val = fmt.Sprint(a.Services()[0])
+	//Creating service to have communication using the specified service..
+	service := ble.NewService(ble.MustParse(serviceUUID))
+	// Creating characteristic to handle data writing...
 
-			if val == "1819" {
-				fmt.Printf("Device name:%s\t SSID:%s\t MACID:%s\n", a.LocalName(), val, a.Addr().String())
+	// Facing Problems while creating handlers...
+	characteristic := service.NewCharacteristic(ble.MustParse(characteristicUUID))
+	//
+	characteristic.HandleWrite(ble.WriteHandlerFunc(recieveToWrite))
+	characteristic.HandleRead(ble.ReadHandlerFunc(recieveToWrite))
 
-			}
-		}
+	// characteristic.HandleWrite(ble.WriteHandlerFunc(handleRead))
+	// characteristic.HandleRead(ble.ReadHandlerFunc(handleWrite))
 
-	})
+	//Adding the service...
+	ble.AddService(service)
 
-	must("scan", err)
+	//Defining advertise context...
+	advertiseCtx := ble.WithSigHandler(ctx, cancel)
+	fmt.Println("Advertising....")
 
-	fmt.Println("Scan completed.")
+	//Start the service...
+	AdvertiseNameandServices(advertiseCtx, service)
+
+}
+
+func AdvertiseNameandServices(ctx context.Context, service *ble.Service) {
+	err := ble.AdvertiseNameAndServices(ctx, "TestAttendanceServer", service.UUID)
+	if err != nil {
+		log.Fatal("Advertisement error occured:", err)
+	}
+
+}
+
+func sendToRead(req ble.Request, rsp ble.ResponseWriter) {
+	data, _ := rsp.Write([]byte("hello"))
+	fmt.Printf("Sent data: %v\n", data)
+}
+
+func recieveToWrite(req ble.Request, rsp ble.ResponseWriter) {
+	data := req.Data()
+	fmt.Printf("Recieved data: %v\n", data)
+
 }
