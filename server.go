@@ -43,8 +43,8 @@ func main() {
 	characteristic := service.NewCharacteristic(ble.MustParse(characteristicUUID))
 	//
 
-	// characteristic.HandleWrite(ble.WriteHandlerFunc(handleRead))
-	// characteristic.HandleRead(ble.ReadHandlerFunc(handleWrite))
+	characteristic.HandleWrite(ble.WriteHandlerFunc(handleRead))
+	characteristic.HandleRead(ble.ReadHandlerFunc(handleWrite))
 
 	//Adding the service...
 	ble.AddService(service)
@@ -66,13 +66,14 @@ func AdvertiseNameandServices(ctx context.Context, service *ble.Service) {
 
 }
 
-func sendToRead(req ble.Request, rsp ble.ResponseWriter) {
+func handleWrite(req ble.Request, rsp ble.ResponseWriter) {
 	data, _ := rsp.Write([]byte("hello"))
+
 	fmt.Printf("Sent data: %v\n", data)
 }
 
-func recieveToWrite(req ble.Request, rsp ble.ResponseWriter) {
+func handleRead(req ble.Request, rsp ble.ResponseWriter) {
 	data := req.Data()
-	fmt.Printf("Recieved data: %v\n", data)
+	fmt.Printf("Recieved data: %v\n", string(data[:]))
 
 }
