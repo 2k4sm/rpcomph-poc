@@ -42,8 +42,6 @@ func main() {
 	// Facing Problems while creating handlers...
 	characteristic := service.NewCharacteristic(ble.MustParse(characteristicUUID))
 	//
-	characteristic.HandleWrite(ble.WriteHandlerFunc(recieveToWrite))
-	characteristic.HandleRead(ble.ReadHandlerFunc(recieveToWrite))
 
 	// characteristic.HandleWrite(ble.WriteHandlerFunc(handleRead))
 	// characteristic.HandleRead(ble.ReadHandlerFunc(handleWrite))
